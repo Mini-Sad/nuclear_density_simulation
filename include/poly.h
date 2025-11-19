@@ -13,25 +13,7 @@ using namespace std;
 class Poly{
 
     public:
-   /**
-    * @brief Constructeur
-    */
     Poly();
-
-   /**
-    * 
-    * 
-    */
-    void calcHermite(n, zVals);
-
-    arma::vec hermite(n);
-
-
-
-
-
-
-
 
     
 
