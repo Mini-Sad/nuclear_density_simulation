@@ -13,8 +13,9 @@ using namespace std;
 class Poly{
 
     private:
-    arma::vec resultat_hermite;
-    arma::vec resultat_laguerre;
+    arma::mat resultat_hermite;
+    arma::vec zVals;
+    arma::mat resultat_laguerre;
 
     public:
     /**
@@ -22,11 +23,13 @@ class Poly{
      */
     Poly();
     /**
-     * @brief méthide calculant les polynômes d'Hermite pour n dans {0,n-1)
+     * @brief méthode calculant les polynômes d'Hermite pour n dans {0,n-1)
      * @param int : n 
      * @param vec : zVals
      * @return nothing
      */
+
+    arma::vec getzValz(void);
     void calcHermite(int, arma::vec);
 
     /**
