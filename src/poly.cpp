@@ -17,7 +17,7 @@ void Poly::calcHermite(int n, arma::vec zVals){
     }
     for (int i=2;i<=n;i++)
     {
-        resultat_hermite.col(i)=2*zVals*resultat_hermite.col(i-1)-2*(n-1)*resultat.col(i-2);
+        resultat_hermite.col(i)=2*zVals*resultat_hermite.col(i-1)-2*(n-1)*resultat_hermite.col(i-2);
     }    
     
 }
