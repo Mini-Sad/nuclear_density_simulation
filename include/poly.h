@@ -15,7 +15,7 @@ class Poly{
     private:
     arma::mat resultat_hermite;
     arma::vec zVals;
-    arma::mat resultat_laguerre;
+    arma::cube resultat_laguerre;
 
     public:
     /**
