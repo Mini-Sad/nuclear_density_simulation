@@ -51,5 +51,5 @@ void Poly::calcLaguerre(int m, int n, arma::vec zVals)
 
 arma::vec Poly::laguerre(int m, int n)
 {
-    resultat_laguerre.tube(m,n);
+    return resultat_laguerre.tube(m,n);
 }

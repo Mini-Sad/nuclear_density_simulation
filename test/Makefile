@@ -4,6 +4,7 @@ CXXFLAGS= -Wall $(CXXFLAGS_diff)
 LDFLAGS = $(LDFLAGS_mac)*
 LIBS = -larmadillo
 
+
 POLY_OBS=poly.o
 TEST_CPP=t.cpp 
 TEST_OBJ=t.o 
@@ -15,6 +16,7 @@ POLY_SRC=$(SRC_DIR)/poly.cpp
 TARGET = test_poly
 
 all:$(TARGET)
+
 
 $(TEST_CPP):$(TEST_SRC)
 	$(CXXTEST) --error-printer -o $(TEST_CPP) $(TEST_SRC)
@@ -31,4 +33,5 @@ $(TARGET):$(TEST_OBJ) $(POLY_OBJ)
 .PHONY: clean
 clean:
 	rm -f $(TEST_CPP)
+	rm -f $(TEST_OBJ)
 
