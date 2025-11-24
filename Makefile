@@ -40,10 +40,10 @@ clean:
 	$(MAKE) -C test clean
 
 # Compilation et éxécution des tests unitaires
-.PHONY: tests
-tests:
-	$(MAKE) -C tests
-	./tests/test_poly
+.PHONY: test
+test:
+	$(MAKE) -C test
+	./test/test_poly
 
 
 run:$(TARGET)
