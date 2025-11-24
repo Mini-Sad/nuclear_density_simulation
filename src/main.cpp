@@ -1,4 +1,8 @@
 #include "../include/poly.h"
 
 
-Poly poly();
+int main(){
+    Poly poly;
+
+    return 0;
+}

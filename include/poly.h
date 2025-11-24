@@ -9,7 +9,6 @@
 
 using namespace std;
 
-
 class Poly{
 
     private:
@@ -54,7 +53,7 @@ class Poly{
      * @brief fonction prenant le calcul du polynôme de Lagrange pour un n et m donné
      * @param int : m
      * @param int : n
-     * @return le résulat du polynôme de Lagrange pour m et n donné
+     * @return le résultat du polynôme de Lagrange pour m et n donné
      */
     arma::vec laguerre(int, int);
 

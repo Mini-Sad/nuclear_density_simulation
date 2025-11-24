@@ -6,14 +6,14 @@ Poly::Poly(){
 }
 
 void Poly::calcHermite(int n, arma::vec zVals){
-    resultat_hermite = arma::ones(zVals.size(),n+1);
+    resultat_hermite = arma::ones(zVals.size(),n);
     if(n>0)
     {
         resultat_hermite.col(1)=2*zVals;
     }
-    for (int i=2;i<=n;i++)
+    for (int i=2;i<n;i++)
     {
-        resultat_hermite.col(i)=2*zVals%resultat_hermite.col(i-1)-2*(n-1)*resultat_hermite.col(i-2);
+        resultat_hermite.col(i)=2*zVals%resultat_hermite.col(i-1)-2*(i-1)*resultat_hermite.col(i-2);
     }    
     
 }
@@ -26,12 +26,12 @@ arma::vec Poly::hermite(int n)
 void Poly::calcLaguerre(int m, int n, arma::vec zVals)
 {
     int k=zVals.n_elem;
-    resultat_laguerre=arma::cube(m+1,n+1,k,arma::fill::zeros);
-    for (int i=0;i<=m;i++)
+    resultat_laguerre=arma::cube(m,n,k,arma::fill::ones);
+    for (int i=0;i<m;i++)
     {   
         for(int K=0;K<k;K++)
         {
-            resultat_laguerre(i,0,k)=1.0;
+            resultat_laguerre(i,0,K)=1;
         }
         if(n>0)
         {
@@ -40,10 +40,10 @@ void Poly::calcLaguerre(int m, int n, arma::vec zVals)
                 resultat_laguerre(i,1,K)=1.0+i-zVals(K);
             } 
         }
-        for (int j=2;j<=n;j++)
+        for (int j=2;j<n;j++)
         {
-            for (int K=0;K<k;k++){
-                resultat_laguerre(i,j,K)=(2.0+((i-1-zVals(K))/j))*resultat_laguerre(i,j-1,K)-(1+(i-1)/j)*resultat_laguerre(i,j-2,K);
+            for (int K=0;K<k;K++){
+                resultat_laguerre(i,j,K)=(2.0+((i-1.0-zVals(K))/j))*resultat_laguerre(i,j-1,K)-(1.0+(i-1.0)/j)*resultat_laguerre(i,j-2,K);
             }
         }
     }

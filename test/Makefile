@@ -1,16 +1,17 @@
 CXX=g++
 CXXTEST=cxxtestgen
 CXXFLAGS= -Wall $(CXXFLAGS_diff)
-LDFLAGS = $(LDFLAGS_mac)*
+LDFLAGS = $(LDFLAGS_mac)
 LIBS = -larmadillo
 
 
-POLY_OBS=poly.o
-TEST_CPP=t.cpp 
-TEST_OBJ=t.o 
+POLY_OBJ=$(OBJ_DIR)/poly.o
+TEST_CPP=test.cpp 
+TEST_OBJ=test.o 
 
-BIN_DIR=../bin 
-SRC_DIR=../src 
+OBJ_DIR=../obj
+BIN_DIR=../bin
+SRC_DIR=../src
 TEST_SRC=test_poly.h
 POLY_SRC=$(SRC_DIR)/poly.cpp
 TARGET = test_poly
@@ -28,10 +29,12 @@ $(TEST_OBJ):$(TEST_CPP)
 	$(CXX) $(CXXFLAGS) -c $(TEST_CPP) -o $(TEST_OBJ)     
 
 $(TARGET):$(TEST_OBJ) $(POLY_OBJ)
-	$(CXX) $(LIBS) $(TEST_OBJ) $(POLY_OBJ) -o $(TARGET) $(LIBS)
+	$(CXX)  $(TEST_OBJ) $(POLY_OBJ) -o $(TARGET) $(LIBS)
 
 .PHONY: clean
 clean:
-	rm -f $(TEST_CPP)
-	rm -f $(TEST_OBJ)
+	rm -f $(TEST_CPP) $(TEST_OBJ) $(POLY_OBJ)
+	rm -f $(TARGET)
+
+
 
