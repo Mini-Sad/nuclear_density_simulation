@@ -17,6 +17,17 @@ class Basis{
     double br;
     int N;
     double Q;
+    int max;
+    int mMax;
+    arma::ivec nMax;
+    arma::imat n_zMax;
+    arma::vec vVals;
+
+    //Basis  r-functions
+    arma::vec r;
+
+    //Basis f-functions
+    arma::vec f;
 
 
 
@@ -24,6 +35,16 @@ class Basis{
     public :
     Basis(double _br, double _bz, int _N, double _Q);
 
+
+    void calcV(void);
+
+    int getmax(void);
+
+    int getmMax(void);
+
+    arma::ivec getnMax(void);
+
+    arma::imat getnZMax(void);
 };
 
 #endif // BASIS_H
