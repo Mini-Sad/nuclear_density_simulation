@@ -45,6 +45,9 @@ class Basis{
     arma::ivec getnMax(void);
 
     arma::imat getnZMax(void);
+
+    arma::vec rPart(arma::vec, int, int);
+
 };
 
 #endif // BASIS_H
