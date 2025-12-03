@@ -1,30 +1,59 @@
 #include "../include/basis.h"
 
 Basis::Basis(double _br, double _bz, int _N, double _Q) : br(_br), bz(_bz), N(_N), Q(_Q) {
+      
+    setmMax();
+    setnMax();
+    setnZMax();
+    getmMax();
+    getnMax();
+    getnZMax();
 
-    calcV();
-    getmax();
-
+}
+double nu(int i, int N, double Q)
+{
+    return (((N+2.0)*std::pow(Q,2.0/3.0)+(1.0/2.0)-i*Q));
 }
 
 
-void Basis::calcV(){
-    vVals = arma::ones(N);
-    for (int i=0; i<N;i++)
+void Basis::setmMax(){
+    mMax = std::floor(((N+2.0)*std::pow(Q,2.0/3.0)-(1.0/2.0))/Q) ;
+    
+}
+
+void Basis::setnMax(){
+    for (int m=0;m<mMax;m++)
     {
-        vVals(i)=(N+2)*pow(Q,2.0/3.0)+(1.0/2.0)-i*Q;
+        nMax(m) = std::floor((mMax-m+1.0)/2.0);
     }
-
+    
 }
 
-int Basis::getmax(){
-    for(int i = 0 ; i < N ; i++)
+void Basis::setnZMax()
+{
+    
+    for (int m=0; m<mMax; m++)
     {
-        if(vVals(i)>=1)
+        for (int n=0; n<nMax(m);n++)
         {
-            max=i;
+            int i = m+2*n+1;
+            _n_zMax(m,n)=std::floor(getnu(i,N,Q));
         }
     }
-    return max;
+}
+
+int Basis::getmMax()
+{
+    return mMax;
+}
+
+arma::ivec Basis::getnMax()
+{
+    return nMax;
+}
+
+arma::imat Basis::getnZMax()
+{
+    return _n_zMax;
 }
 

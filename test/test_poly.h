@@ -1,5 +1,6 @@
 #include <cxxtest/TestSuite.h>
 #include "../include/poly.h"
+#include "../include/basis.h"
 
 class TestPoly:public CxxTest::TestSuite
 {
@@ -34,6 +35,38 @@ class TestPoly:public CxxTest::TestSuite
         calcVals   = poly.laguerre(5, 3); // m = 5, n = 3
         targetVals = { 53.23983333,  47.95550000,  27.87200000,  17.5880,
                     14.66666667,   8.39583333,  -0.81183333,  10.1015};
-        TS_ASSERT_DELTA(arma::norm(calcVals / targetVals - 1.0), 0.0, 1e-08);      
+        TS_ASSERT_DELTA(arma::norm(calcVals / targetVals - 1.0), 0.0, 1e-08);    
+    }    
+    
+    void TestBasis(void)
+    {
+        // Mandatory test #01 - Basis truncation
+        //     br = 1.935801664793151, bz = 2.829683956491218, N = 14, Q = 1.3
+        Basis basis(1.935801664793151,      2.829683956491218,     14,     1.3);
+
+        TS_ASSERT_EQUALS(basis.mMax, 14);
+
+        arma::ivec nMax = {7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1};
+
+        TS_ASSERT((basis.nMax - nMax).is_zero());
+
+        arma::imat n_zMax = {{18, 15, 13, 10, 7, 5, 2}, 
+                            {16, 14, 11,  9, 6, 3, 1}, 
+                            {15, 13, 10,  7, 5, 2, 0}, 
+                            {14, 11,  9,  6, 3, 1, 0}, 
+                            {13, 10,  7,  5, 2, 0, 0}, 
+                            {11,  9,  6,  3, 1, 0, 0}, 
+                            {10,  7,  5,  2, 0, 0, 0}, 
+                            { 9,  6,  3,  1, 0, 0, 0}, 
+                            { 7,  5,  2,  0, 0, 0, 0}, 
+                            { 6,  3,  1,  0, 0, 0, 0}, 
+                            { 5,  2,  0,  0, 0, 0, 0}, 
+                            { 3,  1,  0,  0, 0, 0, 0}, 
+                            { 2,  0,  0,  0, 0, 0, 0}, 
+                            { 1,  0,  0,  0, 0, 0, 0}};
+
+        // check if matrices are equal
+        TS_ASSERT((basis.n_zMax - n_zMax).is_zero());
     }
+
 };

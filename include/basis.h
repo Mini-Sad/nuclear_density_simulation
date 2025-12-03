@@ -7,21 +7,20 @@
 #include <iomanip>
 #include <stdexcept>
 #include "poly.h"
+#include <algorithm>
 
 using namespace std;
 
 class Basis{
 
-    private :
+    public :
     double bz;
     double br;
     int N;
     double Q;
-    int max;
     int mMax;
     arma::ivec nMax;
     arma::imat n_zMax;
-    arma::vec vVals;
 
     //Basis  r-functions
     arma::vec r;
@@ -35,10 +34,13 @@ class Basis{
     public :
     Basis(double _br, double _bz, int _N, double _Q);
 
+    double getnu(int , int , double );
 
-    void calcV(void);
+    void setmMax(void);
 
-    int getmax(void);
+    void setnMax(void);
+
+    void setnZMax(void);
 
     int getmMax(void);
 
