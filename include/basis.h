@@ -14,8 +14,8 @@ using namespace std;
 class Basis{
 
     public :
-    double bz;
     double br;
+    double bz;
     int N;
     double Q;
     int mMax;
