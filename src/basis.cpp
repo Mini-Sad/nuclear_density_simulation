@@ -67,13 +67,24 @@ arma::vec Basis::rPart(arma::vec r, int m, int n)
 {
     r00=arma::ones(r.size());
     Poly poly;
-    poly.calcLaguerre(fabs(m)+1,n+1,r%r/(br*br));
+    poly.calcLaguerre(fabs(m)+2,n+2,r%r/pow(br,2));
     double factor =(1.0/(br*sqrt(pi)))*sqrt(tgamma(n + 1.0)/tgamma((n+fabs(m))+1.0));
     arma::vec exp_term=arma::exp(-pow(r,2.0)/(2.0*pow(br,2.0)));
     arma::vec pow_term=arma::pow(r/br,fabs(m));
     arma::vec laguerre_term=poly.laguerre(fabs(m),n);
-    r00 = factor * exp_term % pow_term % laguerre_term;
+    r00 = factor * exp_term % pow_term%laguerre_term;
     return r00;
 
+}
+
+arma::vec Basis::zPart(arma::vec z, int n_z)
+{
+    Poly poly;
+    poly.calcHermite(n_z+2, z/bz);
+    double factor=(1.0/sqrt(bz))*(1/(sqrt(pow(2,n_z)*sqrt(pi)*tgamma(n_z+1))));
+    arma::vec exp_term= arma::exp(-pow(z,2)/(2.0*pow(bz,2)));
+    arma::vec hermite_term = poly.hermite(n_z);
+    f00=factor*exp_term % hermite_term;
+    return f00;
 }
 

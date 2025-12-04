@@ -27,7 +27,7 @@ class Basis{
     arma::vec r00;
 
     //Basis f-functions
-    arma::vec f;
+    arma::vec f00;
 
 
 
@@ -50,6 +50,8 @@ class Basis{
     arma::imat getnZMax(void);
 
     arma::vec rPart(arma::vec, int, int);
+
+    arma::vec zPart(arma::vec, int);
 
 };
 
