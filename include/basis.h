@@ -21,9 +21,10 @@ class Basis{
     int mMax;
     arma::ivec nMax;
     arma::imat n_zMax;
+    const double pi = M_PI; 
 
     //Basis  r-functions
-    arma::vec r;
+    arma::vec r00;
 
     //Basis f-functions
     arma::vec f;
