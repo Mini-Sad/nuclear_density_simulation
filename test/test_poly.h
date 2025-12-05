@@ -1,5 +1,5 @@
 #include <cxxtest/TestSuite.h>
-#include "../include/poly.h"
+#include "../include/poly.hpp"
 
 class TestPoly:public CxxTest::TestSuite
 {
