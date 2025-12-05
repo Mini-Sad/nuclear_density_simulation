@@ -1,0 +1,81 @@
+==========================
+
+Compilation Artifacts
+
+==========================
+
+Object files directory
+
+obj/
+
+Individual object files (just in case)
+
+*.o
+
+Main Executable
+
+main
+main.exe
+
+==========================
+
+Testing Artifacts (CxxTest)
+
+==========================
+
+The generated C++ runner file
+
+tests/runner.cpp
+
+The compiled test executable
+
+tests/runner
+tests/runner.exe
+
+==========================
+
+Project Outputs (Data)
+
+==========================
+
+Density calculation results
+
+*.mat
+density.mat
+
+Visualization files
+
+*.df3
+density.df3
+
+==========================
+
+Input Data
+
+==========================
+
+Large input matrices (keep your repo light)
+
+If you WANT to share rho.arma, remove the line below
+
+*.arma
+
+==========================
+
+OS & Editor Files
+
+==========================
+
+Mac
+
+.DS_Store
+
+Windows
+
+Thumbs.db
+
+VS Code / Editors
+
+.vscode/
+*.swp
+*~
