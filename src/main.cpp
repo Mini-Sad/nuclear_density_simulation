@@ -2,83 +2,116 @@
 #include <armadillo>
 #include "basis.hpp"
 #include "solver.hpp"
-#include "writer.hpp" 
 
 int main() {
-    // 1. Setup the Physics Constants
+    // ==========================================
+    // 1. SETUP & LOADING
+    // ==========================================
+    std::cout << "--- IPS-PROD PROJECT START ---" << std::endl;
+
     // From Project: br=1.9358..., bz=2.8296..., N=14, Q=1.3
     Basis basis(1.935801664793151, 2.829683956491218, 14, 1.3);
 
-    // 2. Load the Density Matrix
     arma::mat rho_mat;
-    // Ensure "rho.arma" is in your build/execution directory
-    bool status = rho_mat.load("rho.arma", arma::arma_ascii);
-    if (!status) {
+    if (!rho_mat.load("rho.arma", arma::arma_ascii)) {
         std::cerr << "Error: Could not load rho.arma" << std::endl;
         return 1;
     }
     std::cout << "Loaded rho matrix: " << rho_mat.n_rows << "x" << rho_mat.n_cols << std::endl;
 
-    // 3. Define the Grid (r and z axes)
+    // Define Grid
     int nbR = 32;
     int nbZ = 64;
-    arma::vec rVals = arma::linspace(0.0, 10.0, nbR);   // 0 to 10 fm
-    arma::vec zVals = arma::linspace(-20.0, 20.0, nbZ); // -20 to 20 fm
+    arma::vec rVals = arma::linspace(0.0, 10.0, nbR);
+    arma::vec zVals = arma::linspace(-20.0, 20.0, nbZ);
 
-    // 4. Use the Solver (Optimized)
-    Solver solver(basis);
-    
-    // Pre-calculate everything (this handles the heavy lifting)
-    solver.precomputeBasis(rVals, zVals);
-    
-    // Timer start
     arma::wall_clock timer;
+
+    // ==========================================
+    // 2. OPTIMIZED ALGORITHM (Task 2)
+    // ==========================================
+    std::cout << "\n[Task 2] Starting OPTIMIZED Algorithm..." << std::endl;
+    
+    Solver solver(basis);
+    solver.precomputeBasis(rVals, zVals); // Pre-calc happens here
+
     timer.tic();
+    arma::mat densityOptimized = solver.calcDensityOptimized(rho_mat);
+    double timeOptimized = timer.toc();
     
-    // Run the Optimized Calculation
-    arma::mat density = solver.calcDensityOptimized(rho_mat);
-    
-    // Timer stop
-    double duration = timer.toc();
-    std::cout << "Optimized Time: " << duration << " seconds" << std::endl;
-    
-    // 5. Save Results
-    density.save("density.mat", arma::arma_ascii);
+    std::cout << ">>> Optimized Time: " << timeOptimized << " seconds" << std::endl;
 
-    // 6. Visualization Export (Optional but recommended)
-    // Map to 3D Cube for POV-Ray
-    std::cout << "Generating 3D Visualization..." << std::endl;
-    
-    int nCubeX = 32, nCubeY = 32, nCubeZ = 64;
-    arma::cube vol(nCubeX, nCubeY, nCubeZ);
-    double minX = -10.0, maxX = 10.0;
-    double minY = -10.0, maxY = 10.0;
-    double minZ = -20.0, maxZ = 20.0;
+    // ==========================================
+    // 3. NAIVE ALGORITHM (Task 1)
+    // ==========================================
+    std::cout << "\n[Task 1] Starting NAIVE Algorithm..." << std::endl;
+    std::cout << "(This might take a while... grab a coffee)" << std::endl;
 
-    for (int k = 0; k < nCubeZ; ++k) {
-        double z_phys = minZ + k * (maxZ - minZ) / (nCubeZ - 1);
-        int z_idx = (int)std::round( (z_phys - (-20.0)) / (40.0) * (nbZ - 1) );
-        if (z_idx < 0) z_idx = 0; 
-	if (z_idx >= nbZ) z_idx = nbZ - 1;
+    arma::mat densityNaive = arma::zeros(nbZ, nbR);
+    timer.tic();
 
-        for (int j = 0; j < nCubeY; ++j) {
-            double y_phys = minY + j * (maxY - minY) / (nCubeY - 1);
-            for (int i = 0; i < nCubeX; ++i) {
-                double x_phys = minX + i * (maxX - minX) / (nCubeX - 1);
-                double r_phys = std::sqrt(x_phys*x_phys + y_phys*y_phys);
-                int r_idx = (int)std::round( (r_phys - 0.0) / (10.0) * (nbR - 1) );
+    int idx_a = 0;
+    // Loop A (rows of rho matrix)
+    for (int m_a = 0; m_a < basis.mMax; ++m_a) {
+        for (int n_a = 0; n_a < basis.nMax(m_a); ++n_a) {
+            for (int nz_a = 0; nz_a < basis.n_zMax(m_a, n_a); ++nz_a) {
 
-                if (r_idx >= 0 && r_idx < nbR) {
-                    vol(i, j, k) = density(z_idx, r_idx);
-                } else {
-                    vol(i, j, k) = 0.0;
+                // Optimization Lvl 1: Pre-calculate Psi_A outside the inner loop
+                arma::vec R_a = basis.rPart(rVals, m_a, n_a);
+                arma::vec Z_a = basis.zPart(zVals, nz_a);
+                // Outer product Z * R^T
+                arma::mat Psi_a = Z_a * R_a.t(); 
+
+                int idx_b = 0;
+                // Loop B (cols of rho matrix)
+                for (int m_b = 0; m_b < basis.mMax; ++m_b) {
+                    for (int n_b = 0; n_b < basis.nMax(m_b); ++n_b) {
+                        for (int nz_b = 0; nz_b < basis.n_zMax(m_b, n_b); ++nz_b) {
+                            
+                            // Naive access to rho
+                            double rho_val = rho_mat(idx_a, idx_b);
+
+                            // Basic check to save SOME time (skip zeros)
+                            if (std::abs(rho_val) > 1e-12) {
+                                arma::vec R_b = basis.rPart(rVals, m_b, n_b);
+                                arma::vec Z_b = basis.zPart(zVals, nz_b);
+                                arma::mat Psi_b = Z_b * R_b.t();
+
+                                // Accumulate: result += rho * Psi_A * Psi_B
+                                densityNaive += rho_val * (Psi_a % Psi_b);
+                            }
+                            idx_b++;
+                        }
+                    }
                 }
+                idx_a++;
             }
         }
+        // Progress bar for Naive (prints every m_a step)
+        std::cout << "." << std::flush;
     }
-    
-    std::string df3Data = Writer::cubeToDf3(vol);
-    Writer::saveString("density.df3", df3Data);
+    double timeNaive = timer.toc();
+    std::cout << "\n>>> Naive Time: " << timeNaive << " seconds" << std::endl;
+
+    // ==========================================
+    // 4. COMPARISON & SAVING
+    // ==========================================
+    std::cout << "\n--- RESULTS ---" << std::endl;
+    std::cout << "Speedup Factor: " << timeNaive / timeOptimized << "x" << std::endl;
+
+    // Calculate difference (Error)
+    double diff = arma::norm(densityNaive - densityOptimized);
+    std::cout << "Difference (Norm): " << diff << std::endl;
+
+    if (diff < 1e-8) {
+        std::cout << "SUCCESS: Algorithms match!" << std::endl;
+    } else {
+        std::cerr << "WARNING: Results differ! Check logic." << std::endl;
+    }
+
+    // Save one of them (they are the same)
+    densityOptimized.save("density.mat", arma::arma_ascii);
+
 
     return 0;
 }
