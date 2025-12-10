@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall -O3 -std=c++14 $(CXXFLAGS_diff)
+CXXFLAGS = -Wall -O3 -std=c++11 $(CXXFLAGS_diff)
 LDFLAGS = $(LDFLAGS_mac)
 LIBS = -larmadillo
 SRC_DIR = src
