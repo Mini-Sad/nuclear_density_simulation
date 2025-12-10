@@ -33,8 +33,12 @@ class Basis{
 
 
     public :
+    //Constructeur
     Basis(double _br, double _bz, int _N, double _Q);
-
+    /**
+     * @brief Fonction qui calcule nu en fonction de i
+     * @return getnu
+     */
     double getnu(int , int , double );
 
     void setmMax(void);
