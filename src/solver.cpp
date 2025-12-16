@@ -1,12 +1,6 @@
-/**
- * @file solver.cpp
- * @brief Implementation of the Solver class for nuclear density calculation.
- * * This file contains the logic for both pre-calculating the basis functions
- * and running the optimized algorithm using partial summation.
- */
-
-#include "solver.hpp"
+#include "../include/solver.h"
 #include <iostream>
+#include <cmath>
 
 Solver::Solver(Basis& basis) : _basis(basis) {}
 
@@ -16,33 +10,20 @@ void Solver::precomputeBasis(const arma::vec& rVals, const arma::vec& zVals) {
 
     std::cout << "Pre-calculating Basis Functions..." << std::endl;
 
-    // ==========================================
-    // 1. Precompute Vertical (Z) Functions
-    // ==========================================
-    // The Z-part depends only on n_z. We find the maximum n_z used across all states
-    // so we can size our matrix correctly.
+    // --- 1. Precompute Z functions ---
     int max_nz_overall = _basis.n_zMax.max();
-    
-    // Allocate matrix: Rows = z-points, Cols = n_z
     _storedZ.set_size(zVals.n_elem, max_nz_overall);
 
     for (int nz = 0; nz < max_nz_overall; ++nz) {
-        // We calculate the vector once and store it. 
-        // Later, we just look it up in O(1) time.
         _storedZ.col(nz) = _basis.zPart(zVals, nz);
     }
 
-    // ==========================================
-    // 2. Precompute Radial (R) Functions
-    // ==========================================
-    // The R-part depends on m and n.
-    // We allocate a Field (2D array of vectors) of size (mMax, max_n)
+    // --- 2. Precompute R functions ---
     int max_n_overall = _basis.nMax.max();
     _storedR.set_size(_basis.mMax, max_n_overall);
 
     for (int m = 0; m < _basis.mMax; ++m) {
         for (int n = 0; n < _basis.nMax(m); ++n) {
-            // Store R_{mn}(r)
             _storedR(m, n) = _basis.rPart(rVals, m, n);
         }
     }
@@ -51,88 +32,77 @@ void Solver::precomputeBasis(const arma::vec& rVals, const arma::vec& zVals) {
 arma::mat Solver::calcDensityOptimized(const arma::mat& rho) {
     int nbR = _rVals.n_elem;
     int nbZ = _zVals.n_elem;
-    
-    // Result matrix: Rows correspond to Z, Columns correspond to R
+
+    // Initialize Result Density
     arma::mat density = arma::zeros(nbZ, nbR);
 
-    // ==========================================
-    // Index Mapping Strategy
-    // ==========================================
-    // The rho matrix is flat (2D), but physics is 6D.
-    // To access rho(a, b) efficiently without complex math inside the loop,
-    // we pre-calculate the linear starting index for each 'm' block.
-    // The structure is: Block(m=0) -> Block(m=1) -> ...
-    
+    // Map pour trouver rapidement l'index global de départ pour chaque m
     std::vector<int> m_start_indices(_basis.mMax + 1, 0);
     int current_idx = 0;
     for (int m = 0; m < _basis.mMax; ++m) {
-        m_start_indices[m] = current_idx; // Start of block m
+        m_start_indices[m] = current_idx;
         for (int n = 0; n < _basis.nMax(m); ++n) {
-            current_idx += _basis.n_zMax(m, n); // Add number of nz states
+            current_idx += _basis.n_zMax(m, n);
         }
     }
     m_start_indices[_basis.mMax] = current_idx; // End of matrix
 
-    std::cout << "Running Optimized Calculation..." << std::endl;
+    std::cout << "Running Optimized Calculation (Full Cross-Terms)..." << std::endl;
 
-    // ==========================================
-    // The Optimized Loop Structure
-    // ==========================================
-    // Assumption: Density matrix is m-diagonal (rho_{ab} = 0 if m_a != m_b).
-    // We loop over 'm' once, effectively diagonalizing the problem.
-    for (int m = 0; m < _basis.mMax; ++m) {
-        
-        int start_idx = m_start_indices[m];
-        
-        // Loop over radial quantum numbers n_a and n_b
-        for (int n_a = 0; n_a < _basis.nMax(m); ++n_a) {
-            for (int n_b = 0; n_b < _basis.nMax(m); ++n_b) {
-                
-                // --- STEP 1: Partial Sum over Vertical (Z) States ---
-                // We factorize the sum: Sum_all = Sum_R * ( Sum_Z )
-                // This vector 'partialZ' will hold the result of the inner Z sum.
-                arma::vec partialZ = arma::zeros(nbZ);
-                
-                // Calculate the exact linear offset for n_a and n_b within this m-block
-                int idx_a_base = start_idx;
-                for(int k=0; k<n_a; ++k) idx_a_base += _basis.n_zMax(m, k);
-                
-                int idx_b_base = start_idx;
-                for(int k=0; k<n_b; ++k) idx_b_base += _basis.n_zMax(m, k);
+    // --- BOUCLE PRINCIPALE (Corrigée pour inclure m_a != m_b) ---
+    // On doit sommer sur m_a ET m_b pour correspondre à l'algo naïf (coupe phi=0)
+    
+    for (int m_a = 0; m_a < _basis.mMax; ++m_a) {
+        int start_idx_a = m_start_indices[m_a];
 
-                bool block_is_zero = true;
+        for (int m_b = 0; m_b < _basis.mMax; ++m_b) {
+            int start_idx_b = m_start_indices[m_b];
+
+            // Boucle sur n_a et n_b
+            for (int n_a = 0; n_a < _basis.nMax(m_a); ++n_a) {
                 
-                // Inner loops over vertical quantum numbers (nz)
-                for (int nz_a = 0; nz_a < _basis.n_zMax(m, n_a); ++nz_a) {
-                    for (int nz_b = 0; nz_b < _basis.n_zMax(m, n_b); ++nz_b) {
-                        
-                        // Access the density matrix element using our pre-calculated offsets
-                        double val = rho(idx_a_base + nz_a, idx_b_base + nz_b);
-                        
-                        // Optimization: Skip trivial zeros (sparse matrix optimization)
-                        if (std::abs(val) > 1e-10) {
-                            block_is_zero = false;
-                            // Accumulate the weighted product of Z functions.
-                            // We use element-wise multiplication (%) which is vectorized.
-                            partialZ += val * (_storedZ.col(nz_a) % _storedZ.col(nz_b));
+                // Calcul de l'offset précis pour le bloc (m_a, n_a)
+                int idx_a_base = start_idx_a;
+                for(int k=0; k<n_a; ++k) idx_a_base += _basis.n_zMax(m_a, k);
+
+                for (int n_b = 0; n_b < _basis.nMax(m_b); ++n_b) {
+                    
+                    // Calcul de l'offset précis pour le bloc (m_b, n_b)
+                    int idx_b_base = start_idx_b;
+                    for(int k=0; k<n_b; ++k) idx_b_base += _basis.n_zMax(m_b, k);
+
+                    // 1. Partie Verticale (Z)
+                    arma::vec partialZ = arma::zeros(nbZ);
+                    bool block_is_zero = true;
+
+                    // Somme sur nz_a et nz_b
+                    for (int nz_a = 0; nz_a < _basis.n_zMax(m_a, n_a); ++nz_a) {
+                        for (int nz_b = 0; nz_b < _basis.n_zMax(m_b, n_b); ++nz_b) {
+
+                            // On récupère rho(global_idx_a, global_idx_b)
+                            double val = rho(idx_a_base + nz_a, idx_b_base + nz_b);
+
+                            if (std::abs(val) > 1e-12) {
+                                block_is_zero = false;
+                                // Accumulation Z : val * Z_a * Z_b
+                                partialZ += val * (_storedZ.col(nz_a) % _storedZ.col(nz_b));
+                            }
                         }
                     }
-                }
 
-                // --- STEP 2: Combine with Radial (R) Part ---
-                // If the partial sum was all zeros, we skip the expensive outer product.
-                if (!block_is_zero) {
-                    // product R = R_a(r) * R_b(r) (Element-wise)
-                    arma::vec prodR = _storedR(m, n_a) % _storedR(m, n_b);
-                    
-                    // Add to total density using Outer Product:
-                    // partialZ (col vec) * prodR^T (row vec) -> Matrix(nbZ, nbR)
-                    // This updates the entire 2D density grid in one operation.
-                    density += partialZ * prodR.t();
+                    // 2. Partie Radiale (R) et ajout au total
+                    if (!block_is_zero) {
+                        // Produit R = R_a * R_b (element-wise)
+                        // Note: Ici on suppose phi=0, donc les termes exponentiels imaginaires s'annulent ou valent 1
+                        arma::vec prodR = _storedR(m_a, n_a) % _storedR(m_b, n_b);
+
+                        // Outer product: partialZ (col) * prodR (row) -> Matrix
+                        density += partialZ * prodR.t();
+                    }
                 }
             }
         }
     }
-    
+
     return density;
 }
