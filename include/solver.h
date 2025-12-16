@@ -1,5 +1,5 @@
-#ifndef SOLVER_HPP
-#define SOLVER_HPP
+#ifndef SOLVER_H
+#define SOLVER_H
 
 #include <armadillo>
 #include "basis.h" 
