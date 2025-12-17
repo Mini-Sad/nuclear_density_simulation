@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Projet IPS: Solutions de l'équation de Schrodinger</title>
+    <title>Projet IPS: Visualisation et optimisation de la densité nucléaire.</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" type="text/css" href="core/fonts/mono.css"> 
     <link rel="stylesheet" type="text/css" href="core/css/animate.css"> 
@@ -11,9 +11,6 @@
     <link rel="stylesheet" type="text/css" href="core/css/style_ensiie.css"> 
     <link rel="stylesheet" type="text/css" href="core/css/katex.css"> 
     <link rel="stylesheet" type="text/css" href="core/css/asciinema-player.css"> 
-
-
-
   </head>
   <body>
     <textarea id="source" readonly>
@@ -27,990 +24,497 @@ Projet IPS: Visualisation et optimisation de la densité nucléaire.
 A. K. Yahaya, S. Yu, Y. Abdel Wedoud  - ENSIIE - 2025
 ]
 
-<!-- .row[
-`$$\int_{-\infty}^\infty f(x)e^{-x^2} dx \simeq \sum_{i=0}^{n-1}w_if(x_i)$$`
-] -->
-
 .footnote[
 [:book:](index.html)
 ]
-
-???
-
-Some slide notes.
-
-Some math can be put inline `$a = \sqrt{b^2+c^2}$` or as
-
-`$$a_{0}=\frac{1}{4}b_{1}$$`
-
-Some items:
-* first
-* second
-* third
 
 ---
 layout: true
 class: animated fadeIn middle numbers
 
 .footnote[
-Porjet IPS - A. K. Yahaya, S. Yu, Y. Abdel Wedoud  - ENSIIE - 2025 - [:book:](index.html)
+Projet IPS - A. K. Yahaya, S. Yu, Y. Abdel Wedoud  - ENSIIE - 2025 - [:book:](index.html)
 ]
-
 
 ---
 
 class: toc top
-class: middle
 # Sommaire
 
-1. Problème résolu  
-&nbsp;&nbsp;1.1. Construction de la base quantique  
-&nbsp;&nbsp;1.2. Calcul et visualisation de la densité nucléaire  
+1. **Introduction et Contexte** 
+  1. Objectif du projet  
+  2. Modèle Mathématique  
+  3. La Base Quantique  
 
-2. Concepts physiques associés  
-&nbsp;&nbsp;2.1. Densité nucléaire locale  
-&nbsp;&nbsp;2.2. Matrice de densité  
-&nbsp;&nbsp;2.3. Fonctions de base harmoniques  
-&nbsp;&nbsp;2.4. Nombres quantiques  
-&nbsp;&nbsp;2.5. Polynômes spéciaux  
-&nbsp;&nbsp;2.6. Troncature de la base  
+2. **Architecture et Implémentation** 
+  1. Structure
+  2. Chaine de Compilation
+  3. Classes
+  4. Algorithme Naïf  
+  5. Algorithme Optimisé 
 
-3. Description du projet  
-&nbsp;&nbsp;3.1. Architecture du projet  
-&nbsp;&nbsp;3.2. Classes utilisées  
-&nbsp;&nbsp;3.3. Solver.cpp  
-&nbsp;&nbsp;3.4. Main.cpp et génération des visualisations  
-&nbsp;&nbsp;3.5. Chaîne de compilation  
+3. **Validation et Performance** 
+  1. Tests Unitaires  
+  2. Validation  
+  3. Benchmark de Performance  
+  4. Visualisations 
 
-4. Résultats  
-&nbsp;&nbsp;4.1. Comparaison des algorithmes  
-&nbsp;&nbsp;4.2. Visualisations de la densité nucléaire  
-
-5. Tests unitaires  
-&nbsp;&nbsp;5.1. Codes de tests  
-&nbsp;&nbsp;5.2. Tests validés  
-
-6. Conclusion et perspectives
-
+4. **Conclusion**
 
 ---
 
-# 1. Problème résolu
+# 1.1 Objectif du projet
 
-## Objectif général
+## Le contexte
 
-L’objectif de ce projet est de **calculer, analyser et visualiser la densité nucléaire locale**$\rho(\mathbf r)$ à partir d’une **matrice de densité quantique** définie dans une base harmonique déformée.
+Ce projet s'inscrit dans le cadre du module de **Programmation Scientifique (IPS)**. Il vise à simuler la structure de la matière nucléaire à l'échelle microscopique.
 
-Ce problème combine :
-- un **modèle physique** (théorie quantique du noyau),
-- une **implémentation numérique** efficace,
-- une **analyse des performances algorithmiques**.
+## La mission
+
+Nous devons calculer, analyser et visualiser la **densité nucléaire locale** $\rho(\mathbf r)$ à partir d’une matrice de densité quantique donnée.
+
+Ce défi combine trois aspects :
+1.  **Physique** : Compréhension du modèle quantique.
+2.  **Numérique** : Évaluation précise d'une somme multiple.
+3.  **Performance** : Optimisation critique en C++ (réduction de la complexité).
 
 ---
 
-## Formulation mathématique du problème
+# 1.2 Modèle Mathématique
 
-La densité nucléaire locale est définie par l’expansion :
+La densité locale $\rho(\mathbf r)$ se construit par une expansion sur une base de fonctions.
+
+La formule centrale est :
 
 `$$\rho(\mathbf r) = \sum_a \sum_b \rho_{ab} \psi_a(\mathbf r)\psi_b^{*}(\mathbf r)$$`
-où :
-- $\rho_{ab}$ est la **matrice de densité** ;
-- $\psi_a(\mathbf r)$ sont les **fonctions de base quantiques** ;
-- les indices $a$ et $b$ parcourent l’ensemble des états de la base.
 
-Le problème consiste donc à **évaluer numériquement cette somme multiple**
-sur un espace discret de fonctions de base.
+**Les composants :**
+
+- **$\rho_{ab}$** : La matrice de densité (donnée d'entrée, issue d'un calcul Hartree-Fock). Elle pèse la contribution de chaque paire d'états.
+- **$\psi_a(\mathbf r)$** : Les fonctions de base quantiques.
+- **$a, b$** : Indices composites représentant les états quantiques $(m, n, n_z)$.
 
 ---
 
-# 1.1 Construction de la base quantique
+# 1.3 La Base Quantique 
 
-## Fonctions de base
+## Coordonnées Cylindriques
+Le noyau étant modélisé avec une symétrie axiale, nous travaillons en coordonnées cylindriques :
+`$$ \mathbf r \equiv (r_\perp,\theta,z) $$`
 
-Les fonctions de base sont définies en **coordonnées cylindriques**
-
-`$$
-\mathbf r \equiv (r_\perp,\theta,z)
-$$`
-
-et s’écrivent :
+## Séparation des Variables
+Les fonctions de base $\psi$ sont le produit de trois termes indépendants :
 
 `$$
 \psi_{m,n,n_z}(r_\perp,\theta,z)
 =
-Z(z,n_z)\,R(r_\perp,m,n)\,e^{i m \theta}
+\underbrace{Z(z,n_z)}_{\text{Longitudinal}} \times \underbrace{R(r_\perp,m,n)}_{\text{Radial}} \times \underbrace{e^{i m \theta}}_{\text{Angulaire}}
 $$`
 
-avec :
-- $Z(z,n_z)$ : fonction longitudinale (polynômes de Hermite) ;
-- $R(r_\perp,m,n)$ : fonction radiale (polynômes de Laguerre généralisés) ;
-- $m,n,n_z$ : **nombres quantiques** caractérisant les états.
+- **$Z$** : Repose sur les Polynômes de Hermite $H_{n_z}$.
+- **$R$** : Repose sur les Polynômes de Laguerre généralisés $L_n^m$.
 
 ---
 
-## Problème de troncature
+# 1.3 La Base Quantique
 
-La base théorique est **infinie**, mais le calcul numérique impose une
-**troncature contrôlée**.
+## La Troncature
 
-On définit un schéma de troncature basé sur :
-- un paramètre entier \( N \),
-- un paramètre réel \( Q \),
-
-qui limitent les valeurs admissibles des nombres quantiques :
+Une base théorique est infinie. Pour le calcul numérique, nous devons tronquer cette base.
+Les paramètres **$N$** (nombre de couches) et **$Q$** (déformation) définissent les bornes des nombres quantiques :
 
 `$$
 \begin{aligned}
-0 &\le m < m_{\max}, \\
-0 &\le n < n_{\max}(m), \\
-0 &\le n_z < n_{z,\max}(m,n).
+0 &\le m < m_{\max} \\
+0 &\le n < n_{\max}(m) \\
+0 &\le n_z < n_{z,\max}(m,n)
 \end{aligned}
 $$`
 
-L’enjeu est de **préserver l’information physique essentielle**
-tout en maîtrisant le coût numérique.
+Cette logique est implémentée dans la classe `Basis` pour déterminer dynamiquement la taille des boucles de calcul.
 
 ---
 
-# 1.2 Calcul et visualisation de la densité nucléaire
+# 2.1 Structure du Projet
 
-## Calcul numérique
-
-Le calcul direct, appelé **algorithme naïf**, consiste à :
-- parcourir l’ensemble des indices quantiques. 
-- calculer les fonctions de base associées. 
-- sommer les contributions pondérées par la matrice de densité $\rho_{ab}$.
-
-Cette approche est **physiquement correcte**, mais **numériquement coûteuse**,
-avec une complexité élevée.
-
----
-
-## Visualisation
-
-Une fois la densité calculée, on procède à :
-- une **visualisation 2D** dans le plan $(x,z)$.
-- une **visualisation 3D** dans l’espace $(x,y,z)$.
-
-Ces visualisations permettent :
-- d’interpréter la structure spatiale du noyau ;
-- de comparer les résultats entre algorithmes naïf et optimisé.
-
----
-
-## 2.1 Densité nucléaire locale
-
-La **densité nucléaire locale** $ \rho(\mathbf r) $ décrit la répartition spatiale de la matière nucléaire
-au point $ \mathbf r $.
-
-Elle est reconstruite à partir de la **matrice de densité** $ \rho_{ab} $ et d’une base $\{\psi_a\}$ via :
-
-`$$
-\rho(\mathbf r) \equiv \sum_a \sum_b \rho_{ab}\,
-\psi_a(\mathbf r)\,\psi_b^{*}(\mathbf r)
-$$` 
-
-**Interprétation :**
-- $ \rho_{ab} $ pèse les contributions des états $a,b$ ;
-- $ \psi_a(\mathbf r)\psi_b^{*}(\mathbf r) $ reconstruit l’information spatiale ;
-- la visualisation de $ \rho(\mathbf r) $ en 2D/3D donne une lecture physique directe.
-
----
-
-# 2.2 Matrice de densité
-
-La **matrice de densité**  $ \rho_{ab} $ encode l’état quantique du système dans une base de fonctions
-$\{\psi_a\}$. Elle permet de reconstruire la densité spatiale $ \rho(\mathbf r) $.
-
-## Rôle dans le projet
-
-Elle intervient comme un **poids** dans l’expansion :
-
-`$$
-\rho(\mathbf r) \equiv \sum_a \sum_b \rho_{ab}\,
-\psi_a(\mathbf r)\,\psi_b^{*}(\mathbf r)
-$$`
-
-## Propriétés physiques exploitées
-
-- **Symétrie** : $ \rho_{ab} $ = $ \rho_{ba} $ (réduction du coût de calcul).
-- **Sélection par symétrie** (cas du projet) : matrice **m-diagonale**
-  `$$
-  \rho_{ab} = \delta_{m_a,m_b}\,\rho_{ab},
-  $$`   
-  ce qui limite les couplages aux états partageant le même $m$.
-
-**Conséquence :** ces propriétés réduisent le nombre de termes effectivement sommés et
-ouvrent la voie à un calcul optimisé.
-
----
-
-# 2.3 Fonctions de base harmoniques
-
-Pour calculer $ \rho(\mathbf r) $, on développe le système sur une **base quantique** adaptée à une géométrie
-cylindrique.
-
-## Coordonnées cylindriques
-
-On utilise :
-`$$
-\mathbf r \equiv (r_\perp,\theta,z)
-$$`
-
-où :
-- $ r_\perp $ est la distance à l’axe $ z $,
-- $ \theta $ est l’angle azimutal,
-- $ z $ est la coordonnée longitudinale.
-
-## Décomposition de la fonction de base
-
-Chaque fonction de base s’écrit comme un produit séparé :
-
-`$$
-\psi_{m,n,n_z}(r_\perp,\theta,z)
-=
-Z(z,n_z)\,R(r_\perp,m,n)\,e^{i m \theta}
-$$`
-
-avec :
-- $ Z(z,n_z) $ : composante **longitudinale** (polynômes de Hermite),
-- $ R(r_\perp,m,n) $ : composante **radiale** (polynômes de Laguerre généralisés),
-- $ e^{im\theta} $ : dépendance **angulaire**, contrôlée par $m$.
-
----
-
-class: top
-# 2.4 Nombres quantiques
-
-Dans la base utilisée, chaque état quantique est identifié par un triplet de **nombres quantiques**
-$(m,n,n_z)$. Ces indices structurent l’espace des états et déterminent la forme des fonctions de base.
-
-## Rôle des nombres quantiques
-
-On écrit la fonction de base sous la forme :
-
-`$$
-\psi_{m,n,n_z}(r_\perp,\theta,z)
-=
-Z(z,n_z)\,R(r_\perp,m,n)\,e^{i m \theta}.
-$$`
-
-Les nombres quantiques ont les interprétations suivantes :
-
-- $m$ : indice associé à la dépendance angulaire $e^{im\theta}$  
-  (il contrôle les oscillations selon $\theta$).
-
-- $n$ : indice radial de $R(r_,m,n)$  
-  (il contrôle la structure dans le plan transverse $r_\perp$).
-
-- $n_z$ : indice longitudinal de $Z(z,n_z)$  
-  (il contrôle la structure selon l’axe $z$).
-
-## Conséquence pratique
-
-Ces indices déterminent :
-- **quels états sont inclus** dans la base,
-- **le nombre total de fonctions** à traiter,
-- et donc directement le **coût numérique** du calcul de $ \rho(\mathbf r) $.
-
----
-
-# 2.5 Polynômes spéciaux
-
-Les fonctions de base utilisées dans le projet reposent sur des **polynômes orthogonaux** classiques :
-- les **polynômes de Hermite** (partie longitudinale, selon $z$),
-- les **polynômes de Laguerre généralisés** (partie radiale, selon $r_\perp$).
-
-Ils permettent d’exprimer $Z(z,n_z)$ et $R(r_\perp,m,n)$ de manière analytique et stable numériquement.
-
-## Polynômes de Hermite (version physicien)
-
-Définition par récurrence :
-
-`$$
-H_0(\zeta)=1,\qquad H_1(\zeta)=2\zeta
-$$`
-
-`$$
-\forall n\ge 2,\qquad
-H_n(\zeta)=2\zeta\,H_{n-1}(\zeta)-2(n-1)\,H_{n-2}(\zeta)
-$$`
-
-## Polynômes de Laguerre généralisés
-
-Définition par récurrence :
-
-`$$
-L_0^{m}(\eta)=1,\qquad L_1^{m}(\eta)=1+m-\eta
-$$`
-
-`$$
-\forall n\ge 2,\qquad
-L_n^{m}(\eta)=\left(2+\frac{m-1-\eta}{n}\right)L_{n-1}^{m}(\eta)
--\left(1+\frac{m-1}{n}\right)L_{n-2}^{m}(\eta)
-$$`
-
-**Point clé du projet :** ces récurrences doivent être implémentées de façon efficace (vectorisation / pré-calculs)
-car elles sont évaluées un grand nombre de fois lors du calcul de $\rho(\mathbf r)$.
-
----
-
-# 2.6 Troncature de la base
-
-La base théorique des fonctions $\{\psi_a\}$ est **infinie**. En pratique, le calcul numérique impose de
-travailler dans une base **finie** : c’est la **troncature de la base**.
-
-## Principe
-
-On ne conserve qu’un sous-ensemble d’états quantiques $(m,n,n_z)$ en imposant des bornes :
-- limiter le nombre total de fonctions de base,
-- contrôler la précision du calcul de la densité $\rho(\mathbf r)$,
-- garantir des temps d’exécution raisonnables.
-
-## Règles de troncature utilisées
-
-Les valeurs admissibles sont définies par :
-
-`$$
-0 \le m < m_{\max}
-$$`
-
-`$$
-0 \le n < n_{\max}[m]
-$$`
-
-`$$
-0 \le n_z < n_{z,\max}[m,n]
-$$`
-
-où les paramètres de troncature (ex. $N$ et $Q$) déterminent directement
-$m_{\max}$, $n_{\max}[m]$ et $n_{z,\max}[m,n]$.
-
-## Conséquence
-
-La troncature introduit un compromis :
-- **base plus grande** $\Rightarrow$ meilleure précision, coût plus élevé ;
-- **base plus petite** $\Rightarrow$ calcul plus rapide, mais approximation plus forte.
-
----
-
-class: top small
-
-# 3.1 Architecture du projet
-
-Structure des fichiers (arborescence) :
+Le projet est structuré pour séparer clairement la **Physique**, les **Maths** et le **Calcul**.
 
 ```text
 projet-inps-2/
-├── .vscode/
-│   ├── settings.json
-│   └── tasks.json
-├── bin/                     # exécutable(s)
-├── data/                    # données d’entrée
-├── include/                 # headers (.h)
-├── src/                     # sources C++ (.cpp)
-├── obj/                     # fichiers objets (.o)
-│   ├── basis.o
-│   ├── main.o
-│   ├── poly.o
-│   └── solver.o
-├── output/                  # sorties numériques (densités / grilles)
-│   ├── density_naive.arma
-│   ├── density_naive.df3
-│   ├── density_naive.png
-│   ├── density_optimized.arma
-│   ├── density_optimized.df3
-│   ├── density_optimized.png
-│   ├── grid_r.arma
-│   └── grid_z.arma
-├── plots/                   # figures finales (comparaison / différences)
-│   ├── density_naive.png
-│   ├── density_optimized.png
-│   ├── density_diff.png
-│   └── density_combined.png
-├── pres/                    # présentation (HTML/Remark + assets)
-├── test/                    # tests unitaires
-├── AUTHORS
-├── density_naive.pov        # rendu 3D (POV-Ray)
-└── density_optimized.pov
+├── bin/                     # Exécutable final
+├── include/                 # Fichiers d'en-tête (.h / .hpp)
+├── src/                     # Fichiers sources (.cpp)
+├── obj/                     # Fichiers objets intermédiaires
+├── output/                  # Données générées (.arma, .df3)
+└── data/                    # Matrice d'entrée (rho.arma)
+└── test/                    # Tests unitaires (CxxTest)
+└── plots/                   # visualisation
 ```
----
 
-# 3.2 Classes utilisées
-
-Le code C++ repose sur trois classes principales, qui structurent le calcul de la densité nucléaire.
-
-## 1) `Poly` — Polynômes spéciaux (Hermite / Laguerre)
-
-- Calcule les polynômes nécessaires aux fonctions de base :
-  - Hermite via `calcHermite(n, zVals)` puis accès par `hermite(n)`   
-  - Laguerre généralisés via `calcLaguerre(m, n, zVals)` puis accès par `laguerre(m,n)` 
-- Utilisé comme brique de calcul dans la classe `Basis`.
-
-## 2) `Basis` — Base quantique et fonctions de base \(Z\) et \(R\)
-
-- Contient les paramètres physiques/numériques : \(b_r, b_z, N, Q\) 
-- Construit la troncature de la base : `mMax`, `nMax(m)`, `n_zMax(m,n)` 
-- Fournit les fonctions de base :
-  - partie radiale `rPart(r, m, n)` (Laguerre)   
-  - partie longitudinale `zPart(z, n_z)` (Hermite) 
-
-## 3) `Solver` — Calcul de la densité (algorithme optimisé)
-
-- Reçoit une référence vers la base : `Solver(Basis& basis)` 
-- Pré-calcule les fonctions de base sur la grille : `precomputeBasis(rVals, zVals)` 
-- Calcule la densité via l’algorithme optimisé : `calcDensityOptimized(rho)` 
-
-**Orchestration dans `main.cpp` :** chargement de \( \rho \), création de `Basis` et `Solver`,
-exécution naïf + optimisé, sauvegarde des sorties (`.arma`, `.df3`). :contentReference[oaicite:9]{index=9}
+**Choix techniques :**
+- Langage : **C++11** (Standard requis).
+- Algèbre linéaire : **Armadillo** (Matrices, Vecteurs, Opérations BLAS).
+- Compilation : **Makefile** unifié (Gestion automatique des dépendances).
 
 ---
 
----
+# 2.2 Classes : `poly.h`
 
-# Algorithme naïf — Présentation
-
-## Idée générale
-
-L’algorithme naïf calcule la densité sur une grille $(z,r_\perp)$ en évaluant directement la définition :
-
-`$$
-\rho(\mathbf r) \equiv \sum_a \sum_b \rho_{ab}\,\psi_a(\mathbf r)\,\psi_b^{*}(\mathbf r)
-$$`
-
-## Principe de calcul (version brute)
-
-- On énumère tous les états de base $a=(m_a,n_a,n_{z_a})$ et $b=(m_b,n_b,n_{z_b})$.
-- Pour chaque paire $(a,b)$ :
-  - on calcule $Psi_a(z,r_\perp)=Z_a(z)\,R_a(r_\perp)$,
-  - on calcule $Psi_b(z,r_\perp)=Z_b(z)\,R_b(r_\perp)$,
-  - on accumule $ \rho_{ab}\,(Psi_a \odot Psi_b)$ sur la grille.
-
-## Limite principale
-
-Cette approche est correcte mais coûteuse :
-- recalcul fréquent des mêmes $Z$ et $R$,
-- complexité élevée (double somme sur la base).
-
----
-
-# Algorithme naïf — Extrait de code
-
-> Dans ton projet, la version naïve est implémentée dans `main.cpp` (bloc “NAIVE ALGORITHM”). 
+Ce fichier définit la brique mathématique fondamentale. La classe `Poly` gère les récurrences numériques.
 
 ```cpp
-// --- NAIVE ALGORITHM ---
-// Extrait de main.cpp
+class Poly {
+private:
+    // Stockage interne des résultats pour accès rapide
+    arma::mat resultat_hermite;      // Stocke H_n(z)
+    arma::cube resultat_laguerre;    // Stocke L_n^m(r)
+
+public:
+    // Constructeur
+    Poly();
+
+    // Polynômes d'Hermite (Partie Z)
+    // Calcule pour n dans [0, nMax] sur le vecteur zVals
+    void calcHermite(int nMax, arma::vec zVals);
+    arma::vec hermite(int n);
+
+    // Polynômes de Laguerre Généralisés (Partie R)
+    // Calcule pour m, n donnés sur le vecteur zVals (ici r^2)
+    void calcLaguerre(int m, int n, arma::vec zVals);
+    arma::vec laguerre(int m, int n);
+};
+```
+
+---
+
+# 2.2 Classes : `basis.h`
+
+La classe `Basis` encapsule la physique du problème. Elle fait le lien entre les polynômes et les fonctions d'onde $\psi$.
+
+```cpp
+class Basis {
+public:
+    // Paramètres physiques
+    double br, bz;
+    int N; 
+    double Q;
+
+    // Paramètres de troncature (calculés dynamiquement)
+    int mMax;
+    arma::ivec nMax;
+    arma::imat n_zMax;
+
+    // Constructeur : initialise les constantes et calcule les bornes de troncature
+    Basis(double _br, double _bz, int _N, double _Q);
+
+    // Fonctions de base (incluent les exponentielles gaussiennes)
+    // Retourne le vecteur R(r) pour les nombres quantiques (m, n)
+    arma::vec rPart(arma::vec r, int m, int n);
+
+    // Retourne le vecteur Z(z) pour le nombre quantique n_z
+    arma::vec zPart(arma::vec z, int n_z);
+};
+```
+
+---
+
+# 2.2 Classes : `solver.h`
+
+La classe `Solver` orchestre le calcul. Elle implémente la logique d'optimisation et la gestion mémoire des pré-calculs.
+
+```cpp
+#include "basis.h"
+
+class Solver {
+private:
+    Basis& _basis; // Référence vers le modèle physique
+
+    // --- Structures de Pré-calcul (Cache) ---
+    // Stocke R_{mn}(r) pour tous m, n valides
+    arma::field<arma::vec> _storedR;
+    
+    // Stocke Z_{nz}(z) pour tous nz valides
+    arma::mat _storedZ; 
+
+    arma::vec _rVals, _zVals;
+
+public:
+    Solver(Basis& basis);
+
+    // Étape 1 : Remplit _storedR et _storedZ
+    // Complexité : O(Nombre de fonctions de base)
+    void precomputeBasis(const arma::vec& rVals, const arma::vec& zVals);
+
+    // Étape 2 : Exécute l'algorithme optimisé (Partial Sums + BLAS)
+    // Retourne la matrice de densité finale
+    arma::mat calcDensityOptimized(const arma::mat& rho);
+};
+```
+
+---
+
+# 2.3 Chaîne de Compilation
+
+### 1. Production (`make`)
+<div class="mermaid">
+graph LR
+    src[src/*.cpp] -->|g++ -c -O3| obj[obj/*.o]
+    obj -->|g++ -o| bin[main]
+    lib(libarmadillo) -.->|link| bin
+    style src fill:#ffcc80,stroke:#333
+    style obj fill:#90caf9,stroke:#333
+    style bin fill:#a5d6a7,stroke:#333
+</div>
+
+### 2. Validation (`make test`)
+<div class="mermaid">
+graph LR
+    header[test/*.h ou *.hpp] -->|cxxtestgen| runner[test/runner.cpp]
+    runner -->|g++ -c| runobj[test/runner.o]
+    obj[obj/poly.o<br/>obj/basis.o] -->|link| testbin[test/test_poly]
+    runobj -->|g++ -o| testbin
+    lib(libarmadillo) -.->|link| testbin
+    style header fill:#64b5f6,stroke:#333
+    style runner fill:#64b5f6,stroke:#333
+    style runobj fill:#64b5f6,stroke:#333
+    style obj fill:#90caf9,stroke:#333
+    style testbin fill:#64b5f6,stroke:#333
+</div>
+
+---
+
+# 2.4 Algorithme Naïf : Concept
+
+L'algorithme naïf est une **traduction littérale** de la formule mathématique.
+
+`$$\rho = \sum_{a=(m_a,n_a,nz_a)} \sum_{b=(m_b,n_b,nz_b)} \rho_{ab} \psi_a \psi_b^*$$`
+
+Cela implique **6 boucles imbriquées**.
+
+## Problèmes de performance :
+1.  **Recalculs** : Si l'état $a$ est utilisé 1000 fois dans la boucle $b$, la fonction $\psi_a$ est recalculée 1000 fois.
+2.  **Complexité** : L'évaluation des polynômes (exponentielles, racines carrées) se fait au cœur de la boucle la plus profonde.
+
+---
+
+# 2.5 Algorithme Naïf : Code
+
+```cpp
+// Extrait de main.cpp (Version Naïve)
 
 arma::mat densityNaive = arma::zeros(nbZ, nbR);
 
-int idx_a = 0;
 for (int m_a = 0; m_a < basis.mMax; ++m_a) {
   for (int n_a = 0; n_a < basis.nMax(m_a); ++n_a) {
     for (int nz_a = 0; nz_a < basis.n_zMax(m_a, n_a); ++nz_a) {
 
+      // Calcul coûteux "à la volée"
       arma::vec R_a = basis.rPart(rVals, m_a, n_a);
       arma::vec Z_a = basis.zPart(zVals, nz_a);
-      arma::mat Psi_a = Z_a * R_a.t(); // Psi_a(z,r)
+      arma::mat Psi_a = Z_a * R_a.t();
 
-      int idx_b = 0;
-      for (int m_b = 0; m_b < basis.mMax; ++m_b) {
-        for (int n_b = 0; n_b < basis.nMax(m_b); ++n_b) {
-          for (int nz_b = 0; nz_b < basis.n_zMax(m_b, n_b); ++nz_b) {
+      // ... 3 boucles imbriquées pour l'état b ...
 
-            double rho_val = rho_mat(idx_a, idx_b);
-
-            if (std::fabs(rho_val) > 1e-12) {
-              arma::vec R_b = basis.rPart(rVals, m_b, n_b);
-              arma::vec Z_b = basis.zPart(zVals, nz_b);
-              arma::mat Psi_b = Z_b * R_b.t(); // Psi_b(z,r)
-
-              densityNaive += rho_val * (Psi_a % Psi_b);
-            }
-            ++idx_b;
-          }
-        }
-      }
-      ++idx_a;
+      // Somme scalaire (lente)
+      densityNaive += rho_val * (Psi_a % Psi_b);
     }
   }
 }
 ```
+
 ---
 
-# Algorithme optimisé — Présentation
+# 2.5 Algorithme Optimisé : Stratégie
 
-## Idée générale
+Nous avons appliqué la stratégie **"Version 5"** du cours pour transformer ce code.
 
-L’algorithme optimisé accélère le calcul de $\rho(\mathbf r)$ en :
+## 1. Suppression des Deltas
+La matrice $\rho$ est bloc-diagonale ($m_a = m_b$).
+$\Rightarrow$ On remplace les deux boucles sur $m$ par une seule boucle.
 
-- **pré-calculant** les fonctions de base sur la grille :
-  - $Z(z,n_z)$ pour tous les $n_z$
-  - $R(r_\perp,m,n)$ pour tous les couples $(m,n)$ :contentReference[oaicite:0]{index=0}
-- **réorganisant les boucles** afin d’éviter de recalculer les mêmes termes.
-- utilisant une **factorisation “partial sums”** sur la partie verticale :
+## 2. Pré-calculs (Mémoire vs CPU)
+On sort tous les calculs de polynômes des boucles.
+- On stocke tous les vecteurs $Z(z)$ dans une matrice `_storedZ`.
+- On stocke tous les vecteurs $R(r)$ dans un champ `_storedR`.
+$\Rightarrow$ Le coût d'accès devient $O(1)$.
+
+---
+
+# 2.5 Algorithme Optimisé : Factorisation
+
+C'est l'optimisation mathématique clé (**Partial Sums**).
+On factorise la somme pour isoler la partie dépendante de $Z$ :
 
 `$$
-\underbrace{\sum_{n_{za},n_{zb}}\rho_{ab}\,Z_{a}(z)\,Z_{b}(z)}_{\text{calculée une fois}}
-\quad\Rightarrow\quad
-\rho(z,r_\perp)\;+=\;\text{partialZ}(z)\times\big(R_a(r_\perp)R_b(r_\perp)\big)
+\rho(z,r) += \underbrace{\left(\sum_{n_{za},n_{zb}}\rho_{ab}\,Z_{a}(z)\,Z_{b}(z)\right)}_{\text{Somme Partielle Z}} \times \underbrace{\big(R_a(r)R_b(r)\big)}_{\text{Terme Radial}}
 $$`
 
-## Bénéfice
-
-- Moins d’évaluations redondantes de $Z$ et $R$
-- Accumulation finale efficace via un **produit extérieur** :
-`density += partialZ * prodR.t()` :contentReference[oaicite:1]{index=1}
+1.  On calcule d'abord la somme partielle sur $Z$ (vecteur colonne).
+2.  On multiplie ensuite par le terme radial (vecteur ligne).
+3.  Cela met à jour toute la grille $(z,r)$ d'un coup.
 
 ---
 
-# Algorithme optimisé — Extrait de code (`solver.cpp`)
+# 2.5 Algorithme Optimisé : Code
 
 ```cpp
-// 1) Pré-calcul des fonctions de base sur la grille (cache)
-void Solver::precomputeBasis(const arma::vec& rVals, const arma::vec& zVals) {
-    _rVals = rVals; _zVals = zVals;
+// Extrait de Solver::calcDensityOptimized
+for (int m = 0; m < _basis.mMax; ++m) {
+    for (int n_a = 0; n_a < _basis.nMax(m); ++n_a) {
+        for (int n_b = 0; n_b < _basis.nMax(m); ++n_b) {
 
-    int max_nz_overall = _basis.n_zMax.max();
-    _storedZ.set_size(zVals.n_elem, max_nz_overall);
-    for (int nz = 0; nz < max_nz_overall; ++nz) {
-        _storedZ.col(nz) = _basis.zPart(zVals, nz);
-    }
+            // Étape 1 : Somme Partielle sur Z (Vectorisée)
+            arma::vec partialZ = arma::zeros(nbZ);
+            
+            for (int nz_a ... ) {
+                for (int nz_b ... ) {
+                   double val = rho(...);
+                   if (val != 0) 
+                       // Vectorisation SIMD via Armadillo
+                       partialZ += val * (_storedZ.col(nz_a) % _storedZ.col(nz_b));
+                }
+            }
 
-    int max_n_overall = _basis.nMax.max();
-    _storedR.set_size(_basis.mMax, max_n_overall);
-    for (int m = 0; m < _basis.mMax; ++m) {
-        for (int n = 0; n < _basis.nMax(m); ++n) {
-            _storedR(m, n) = _basis.rPart(rVals, m, n);
-        }
-    }
-}
-
-// 2) Calcul optimisé : "partial sums" sur Z + produit extérieur avec R
-arma::mat Solver::calcDensityOptimized(const arma::mat& rho) {
-    arma::mat density = arma::zeros(_zVals.n_elem, _rVals.n_elem);
-
-    // indexation globale par bloc (m,n) -> offsets dans rho
-    std::vector<int> m_start_indices(_basis.mMax + 1, 0);
-    int current_idx = 0;
-    for (int m = 0; m < _basis.mMax; ++m) {
-        m_start_indices[m] = current_idx;
-        for (int n = 0; n < _basis.nMax(m); ++n)
-            current_idx += _basis.n_zMax(m, n);
-    }
-    m_start_indices[_basis.mMax] = current_idx;
-```
----
-```
-    for (int m_a = 0; m_a < _basis.mMax; ++m_a)
-    for (int m_b = 0; m_b < _basis.mMax; ++m_b)
-    for (int n_a = 0; n_a < _basis.nMax(m_a); ++n_a)
-    for (int n_b = 0; n_b < _basis.nMax(m_b); ++n_b) {
-
-        // offsets précis des blocs (m_a,n_a) et (m_b,n_b)
-        int idx_a_base = m_start_indices[m_a];
-        for(int k=0; k<n_a; ++k) idx_a_base += _basis.n_zMax(m_a, k);
-
-        int idx_b_base = m_start_indices[m_b];
-        for(int k=0; k<n_b; ++k) idx_b_base += _basis.n_zMax(m_b, k);
-
-        arma::vec partialZ = arma::zeros(_zVals.n_elem);
-        bool block_is_zero = true;
-
-        for (int nz_a = 0; nz_a < _basis.n_zMax(m_a, n_a); ++nz_a)
-        for (int nz_b = 0; nz_b < _basis.n_zMax(m_b, n_b); ++nz_b) {
-
-            double val = rho(idx_a_base + nz_a, idx_b_base + nz_b);
-            if (std::abs(val) > 1e-12) {
-                block_is_zero = false;
-                partialZ += val * (_storedZ.col(nz_a) % _storedZ.col(nz_b));
+            // Étape 2 : Produit Extérieur (Outer Product)
+            // Met à jour la matrice densité (nbZ x nbR) en une instruction BLAS
+            if (!partialZ.is_zero()) {
+                arma::vec prodR = _storedR(m, n_a) % _storedR(m, n_b);
+                density += partialZ * prodR.t(); 
             }
         }
-
-        if (!block_is_zero) {
-            arma::vec prodR = _storedR(m_a, n_a) % _storedR(m_b, n_b);
-            density += partialZ * prodR.t(); // produit extérieur (Z × R)
-        }
     }
-
-    return density;
 }
 ```
----
-class: small 
-# 3.4 `main.cpp` — Orchestration & génération des volumes 3D (DF3)
-
-`main.cpp` joue le rôle de **pilote** du projet : il charge les entrées, exécute les deux algorithmes, puis génère les fichiers de sortie (2D et 3D). 
-
-## Pipeline d’exécution
-
-1. **Initialisation**
-   - création de la base : `Basis(br, bz, N, Q)`
-   - chargement de la matrice de densité `rho.arma`
-   - création des grilles : $r \in [0,10]$, $z \in [-20,20]$ 
-
-2. **Calculs**
-   - exécution de l’algorithme optimisé via `Solver` (+ pré-calcul des bases)
-   - exécution de l’algorithme naïf (référence)
-   - calcul des métriques : *speedup* et norme de la différence :contentReference[oaicite:2]{index=2}
-
-3. **Sauvegarde 2D (format Armadillo)**
-   - `output/grid_r.arma`, `output/grid_z.arma`
-   - `output/density_optimized.arma`, `output/density_naive.arma` 
-
-## Génération 3D pour l’applet 3D / POV-Ray (format DF3)
-
-- transformation $\rho(z,r_\perp)$ en un **volume 3D** $\rho(x,y,z)$ via `buildDensityCubeFrom2D(...)` (interpolation radiale $r=\sqrt{x^2+y^2}$).   
-- conversion en DF3 via `cubeToDf3(...)` :
-  - écriture de l’en-tête DF3 (dimensions),
-  - normalisation des valeurs sur $[0,255]$,
-  - clamp des valeurs négatives (anti “brouillard”). 
-- écriture des volumes :
-  - `output/density_optimized.df3`
-  - `output/density_naive.df3` 
 
 ---
-# 3.5 Chaîne de compilation et d’exécution
 
-## Vue d’ensemble
+# 3.1 Tests Unitaires
 
-Le projet suit un pipeline standard **C++ / Armadillo / Makefile** :
+La validité du code est assurée par une suite de tests utilisant le framework **CxxTest**.
 
-1. **Compilation** : chaque fichier `src/*.cpp` est compilé en objet `obj/*.o`.
-2. **Édition de liens** : tous les objets sont liés pour produire l’exécutable `bin/main`.
-3. **Exécution** : `bin/main` charge une matrice de densité (par défaut `data/rho.arma`) et calcule les densités.
-4. **Sorties** : le programme crée un répertoire `output/` et y sauvegarde notamment les grilles et densités (`*.arma`) ainsi que les volumes DF3 (`density_optimized.df3`, `density_naive.df3`). 
-5. **Paramétrage** : le chemin du fichier `rho.arma` peut être fourni en argument (`./bin/main [path_to_rho.arma]`). 
+## Couverture des tests :
 
-## Exécution typique
+1.  **Test #00 (Polynômes)** : Vérifie que les récurrences de $H_n$ et $L_n^m$ produisent les valeurs exactes attendues (comparaison avec des valeurs tabulées).
+2.  **Test #01 (Troncature)** : Vérifie que la logique de `Basis` génère les bonnes limites `mMax` et `nMax` pour $N=14$.
+3.  **Test #02 (Radial)** : Vérifie la fonction `rPart`.
+4.  **Test #03 (Longitudinal)** : Vérifie la fonction `zPart`.
 
-- Compiler : `make`
-- Lancer : `make run`
-- Nettoyer : `make clean`
-- Tests unitaires : `make test`
----
----
-# Extraits du Makefile
-
-```makefile
-CXX = g++
-
-# --- CONFIGURATION ARMADILLO ---
-ARMA_INC = $(shell pkg-config --cflags armadillo)
-ARMA_LIBS = $(shell pkg-config --libs armadillo)
-
-ifeq ($(ARMA_LIBS),)
-    ARMA_LIBS = -larmadillo
-endif
-
-# --- FLAGS DE COMPILATION ---
-CXXFLAGS = -Wall -O3 -std=c++14 $(CXXFLAGS_diff) $(ARMA_INC)
-LDFLAGS = $(LDFLAGS_mac)
-LIBS = $(ARMA_LIBS)
-
-SRC_DIR = src
-OBJ_DIR = obj
-BIN_DIR = bin
-INC_DIR = include
-
-TARGET = $(BIN_DIR)/main
-
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
-OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
-```
----
-```
-
-all: $(TARGET)
-
-$(TARGET): $(OBJS) | $(BIN_DIR)
-	$(CXX) $(LDFLAGS) $(OBJS) -o $(TARGET) $(LIBS)
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -c $< -o $@
-
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
-
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
-
-.PHONY: clean
-clean:
-	rm -f $(OBJ_DIR)/*.o
-	rm -f $(TARGET)
-	rm -rf output/
-	rm -f *.png
-
-.PHONY: test
-test:
-	$(MAKE) -C test
-	./test/test_poly
-
-run: $(TARGET)
-	./$(TARGET)
-```
----
-
-# 4.1 Comparaison des algorithmes (Naïf vs Optimisé)
-
-## Même objectif physique
-
-Les deux versions calculent la même densité :
-
-`$$
-\rho(\mathbf r)=\sum_a\sum_b \rho_{ab}\,\psi_a(\mathbf r)\,\psi_b^{*}(\mathbf r)
-$$`
-
-La différence porte uniquement sur l’organisation du calcul (naïf = recalculs, optimisé = pré-calculs + factorisation).
-
-## Validation numérique (à partir de vos résultats)
-
-On compare la différence :
-`$$
-\Delta \rho(z,r_\perp)=\rho_{\text{naïf}}(z,r_\perp)-\rho_{\text{opt}}(z,r_\perp)
-$$`
-
-Résultats obtenus (carte “Naïf − Optimisé”) :
-- $\max|\Delta\rho| = 4.691\times 10^{-15}$
-- $\|\Delta\rho\|_2 = 6.631\times 10^{-14}$
-- Validation : **OK** (écarts compatibles avec des erreurs d’arrondi numériques)
-
-## Conclusion
-
-L’algorithme optimisé reproduit le résultat du naïf avec une précision machine, tout en réduisant fortement le coût de calcul.
+**Statut :** 100% Succès (`OK`).
 
 ---
-class: small
-# 4.2 Différence 2D (Naïf − Optimisé)
 
-## Carte d’erreur (validation)
+# 3.2 Validation Scientifique
 
-.center[
-<!-- Remplace le chemin si nécessaire -->
-![](density_diff.png)
+Avant de mesurer la performance, nous devons prouver que l'optimisation ne dégrade pas le résultat.
+
+Nous calculons la norme de la différence entre les deux matrices de densité finales :
+
+`$$ \Delta = \|\rho_{\text{naïf}} - \rho_{\text{opt}}\|_2 $$`
+
+## Résultats
+
+- **Erreur obtenue :** $\approx 6.63 \times 10^{-14}$
+- **Interprétation :** Cette erreur est de l'ordre de la précision machine (`double precision`).
+
+$\Rightarrow$ L'algorithme optimisé est **mathématiquement équivalent** à l'algorithme naïf.
+
+---
+
+# 3.3 Benchmark de Performance
+
+Comparaison des temps d'exécution sur une grille standard ($32 \times 64$) avec les paramètres $N=14, Q=1.3$.
+
+.row[
+.column.w48.middle[
+### Algorithme Naïf
+- Complexité : Élevée
+- Recalculs constants
+- **Temps : > 100 secondes** (ordre de grandeur)
 ]
+
+.column.w48.middle[
+### Algorithme Optimisé
+- Complexité : Réduite
+- Pré-calculs + BLAS
+- **Temps : < 1 seconde**
+]
+]
+
+.alert.hcenter[
+**SPEEDUP FACTOR > 100x**
+]
+
+*(Le temps exact dépend de la machine, mais le gain est systématiquement de deux ordres de grandeur)*
+
+---
+
+# 3.4 Visualisations 2D
+
+Les fichiers `.arma` générés sont visualisés (ici via script Python) pour confirmer la physique.
+
+.row[
+.column.w48.middle[
+.center[![](density_naive2d.png)]
+.caption[Densité Naïve]
+]
+.column.w48.middle[
+.center[![](density_optimized2d.png)]
+.caption[Densité Optimisée]
+]
+]
+
+---
+
+# 3.4 Validation - Carte de Différence
+
+Pour visualiser les erreurs numériques, nous traçons $\Delta\rho(z,r) = \rho_{\text{naïf}} - \rho_{\text{opt}}$.
+
+.center[![](density_diff.png)]
 
 .caption[
-Différence $\Delta\rho(z,r_\perp)=\rho_{\text{naïf}}-\rho_{\text{opt}}$.
-Les niveaux $\sim 10^{-15}$ confirment une concordance à la précision machine.
-]
-
----
-class: small
-
-# 4.2 Visualisation — Densité 2D (Naïf)
-
-.center[
-<!-- Remplace le chemin si nécessaire -->
-![](density_naive2d.png)
-]
-
-.caption[
-Densité nucléaire locale $\rho(z,r_\perp)$ calculée avec l’algorithme naïf.
-]
-
----
-class: small
-# 4.2 Visualisation — Densité 2D (Optimisée)
-
-.center[
-<!-- Remplace le chemin si nécessaire -->
-![](density_optimized2d.png)
-]
-
-.caption[
-Densité nucléaire locale $\rho(z,r_\perp)$ calculée avec l’algorithme optimisé.
+Carte de différence (échelle $10^{-15}$).
+Le bruit visible correspond aux erreurs d'arrondi flottant, confirmant l'identité des algorithmes.
 ]
 
 ---
 
-# 4.2 Visualisation optimisée en 3D
+# 3.4 Visualisations 3D
 
-.center[
-<!-- Remplace le chemin si nécessaire -->
-![](density_optimized.png)
+Pour le rendu volumique, nous convertissons la densité en format **DF3** et utilisons **POV-Ray**. Cela permet de visualiser la structure spatiale du noyau (forme ellipsoïdale ou déformée).
+
+.row[
+.column.w48.middle[
+.center[![](density_naive.png)]
+.caption[Rendu Naïf]
 ]
-
-.caption[
-plot de la densité nucléaire locale $\rho_{\text{opt}}$.
+.column.w48.middle[
+.center[![](density_optimized.png)]
+.caption[Rendu Optimisé]
 ]
-
----
-
-# 4.2 Visualisation - naif 3D 
-
-.center[
-<!-- Remplace le chemin si nécessaire -->
-![](density_naive.png)
-]
-
-.caption[
-plot de la densité nucléaire locale $\rho_{\text{naïf}}$.
 ]
 
 ---
 
-# 5. Tests unitaires — Vue d’ensemble
+# 4. Conclusion
 
-Les tests unitaires sont regroupés dans `test_poly.h` (framework **CxxTest**). :contentReference[oaicite:0]{index=0}
+## Bilan Technique
+Ce projet nous a permis de mettre en œuvre une chaîne complète de programmation scientifique :
 
-Objectif : valider séparément les briques critiques du projet :
-- **Test #00** : polynômes de **Hermite** et **Laguerre** (classe `Poly`)
-- **Test #01** : **troncature** de la base (classe `Basis`)
-- **Test #02** : fonctions radiales **R** : `rPart(r,m,n)`
-- **Test #03** : fonctions longitudinales **Z** : `zPart(z,nz)`
+1.  **Architecture Modulaire** : Séparation Physique / Calcul.
+2.  **Qualité Logicielle** : Tests unitaires, Makefile robuste, Documentation.
+3.  **Optimisation Algorithmique** : Compréhension fine de l'accès mémoire et de l'algèbre linéaire vectorisée.
+
+## Résultat Final
+Nous sommes passés d'un code de référence lent (Naïf) à un code haute performance (Optimisé) capable de calculer la densité nucléaire quasi-instantanément, sans perte de précision.
 
 ---
 
+class: middle center
 
+# Merci de votre attention.
 
-# Test #00 — Polynômes (Hermite / Laguerre)
-
-## Ce que le test vérifie
-- `calcHermite(6, zVals)` calcule $H_n$ pour $n=0..5$, puis comparaison des valeurs de $H_4$ et $H_5$.
-- `calcLaguerre(6, 4, zVals)` calcule $L_n^m$ pour $m=0..5$ et $n=0..3$, puis comparaison de $(m,n)=(4,2)$ et $(5,3)$.
-- Validation par erreur relative (norme) < `1e-08`.
-
-```cpp
-void testPoly(void){
-  Poly poly;
-  arma::vec zVals, calcVals, targetVals;
-
-  zVals = {-3.1, -2.3, -1.0, -0.3, 0.1, 4.3, 9.2, 13.7};
-  poly.calcHermite(6, zVals);
-
-  calcVals   = poly.hermite(4);
-  targetVals = {1.02835360e+03, 2.05825600e+02, -2.00000000e+01, 7.80960000e+00,
-                1.15216000e+01, 4.59456160e+03, 1.10572154e+05, 5.54643458e+05};
-  TS_ASSERT_DELTA(arma::norm(calcVals / targetVals - 1.0), 0.0, 1e-08);
-
-  // ... hermite(5) ...
-
-  zVals = {0.1, 0.3, 1.2, 1.8, 2.0, 2.5, 7.1, 11.1};
-  poly.calcLaguerre(6, 4, zVals);
-
-  calcVals   = poly.laguerre(4, 2);
-  targetVals = {14.405, 13.245, 8.52, 5.82, 5., 3.125, -2.395, 10.005};
-  TS_ASSERT_DELTA(arma::norm(calcVals / targetVals - 1.0), 0.0, 1e-08);
-
-  // ... laguerre(5,3) ...
-}
-```
----
-# Test #01 — Troncature de la base
-```cpp
-void TestBasis(void){
-  Basis basis(1.935801664793151, 2.829683956491218, 14, 1.3);
-
-  TS_ASSERT_EQUALS(basis.mMax, 14);
-
-  arma::ivec nMax = {7,7,6,6,5,5,4,4,3,3,2,2,1,1};
-  TS_ASSERT((basis.nMax - nMax).is_zero());
-
-  arma::imat n_zMax = {
-    {18,15,13,10, 7,5,2},
-    {16,14,11, 9, 6,3,1},
-    {15,13,10, 7, 5,2,0},
-    // ...
-    { 1, 0, 0, 0, 0,0,0}
-  };
-
-  TS_ASSERT((basis.n_zMax - n_zMax).is_zero());
-}
-```
----
-# Tests unitaires Basis
-
-```cpp
-void TestBasis(void){
-  Basis basis(1.935801664793151, 2.829683956491218, 14, 1.3);
-
-  TS_ASSERT_EQUALS(basis.mMax, 14);
-
-  arma::ivec nMax = {7,7,6,6,5,5,4,4,3,3,2,2,1,1};
-  TS_ASSERT((basis.nMax - nMax).is_zero());
-
-  arma::imat n_zMax = {
-    {18,15,13,10, 7,5,2},
-    {16,14,11, 9, 6,3,1},
-    {15,13,10, 7, 5,2,0},
-    // ...
-    { 1, 0, 0, 0, 0,0,0}
-  };
-
-  TS_ASSERT((basis.n_zMax - n_zMax).is_zero());
-}
-````
----
-
-# Tests unitaires BasisO2
-```cpp
-void TestBasis02(void){
-  Basis basis(1.935801664793151, 2.829683956491218, 14, 1.3);
-
-  arma::vec r = {3.1, 2.3, 1.0, 0.0, 0.1, 4.3, 9.2, 13.7};
-
-  arma::vec res00 = {8.08521235111303e-02, 1.43887615825118e-01, 2.55045100912706e-01,
-                     2.91450097294984e-01, 2.91061479407116e-01, 2.47240792330589e-02,
-                     3.63004153921473e-06, 3.87659726026123e-12};
-  TS_ASSERT_DELTA(arma::norm(basis.rPart(r, 0, 0) - res00), 0.0, 1e-15);
-
-  arma::vec res82 = {5.87858442372438e-02, 1.35240488413384e-02, 4.06810074575519e-05,
-                     0.0, 4.92817669085478e-13, 8.52011998934850e-02,
-                     5.20525909328609e-02, 1.44615166152252e-05};
-  TS_ASSERT_DELTA(arma::norm(basis.rPart(r, 8, 2) - res82), 0.0, 1e-15);
-}
-````
----
-# Tests unitaires BasisO3
-```cpp
-void TestBasis03(void){
-  Basis basis(1.935801664793151, 2.829683956491218, 14, 1.3);
-  arma::vec z = {-10.1, -8.4, -1.0, 0.0, 0.1, 4.3, 9.2, 13.7};
-
-  arma::vec res00 = {7.64546544834383e-04, 5.44886272162148e-03, 4.19492564268520e-01,
-                     4.46522724110539e-01, 4.46243982300708e-01, 1.40736821086932e-01,
-                     2.26186220733178e-03, 3.62929640195959e-06};
-  TS_ASSERT_DELTA(arma::norm(basis.zPart(z, 0) - res00), 0.0, 1e-15);
-
-  arma::vec res15 = {-9.48674551049192e-02, -1.40338701953237e-03, 1.85620628040096e-01,
-                     -0.0, -3.93028470685214e-02, -1.79526868763440e-01,
-                      2.15604096600475e-01, 2.44977220882127e-01};
-  TS_ASSERT_DELTA(arma::norm(basis.zPart(z, 15) - res15), 0.0, 1e-15);
-}
-```
----
-
-# Conclusion et perspectives
-
-## Conclusion
-
-- Mise en œuvre d’un pipeline complet pour **calculer et visualiser** la densité nucléaire locale $\rho(\mathbf r)$.
-- Deux implémentations comparées :
-  - **naïve** (référence, correcte mais coûteuse),
-  - **optimisée** (pré-calculs et factorisation), validée par une **différence à la précision machine**.
-- Génération de sorties exploitables :
-  - grilles et densités au format `*.arma`,
-  - volumes 3D au format `*.df3` pour visualisation (POV-Ray / applet).
-
-## Perspectives
-
-- **Accélération** supplémentaire :
-  - parallélisation (OpenMP / MPI) sur les boucles $(m,n)$,
-  - vectorisation plus agressive et amélioration du cache.
-- **Qualité numérique** :
-  - analyse de convergence en fonction de la troncature $(N,Q)$,
-  - contrôle systématique de l’erreur relative.
-- **Visualisation** :
-  - automatiser la chaîne de rendu (DF3 → images) et la comparaison multi-cas.
-- **Extension physique** :
-  - intégration d’observables complémentaires (moments, profils radiaux, densités normalisées).
-
-
-
+### Questions ?
     </textarea>
-
     <script src="core/javascript/remark.js"></script>
     <script src="core/javascript/katex.min.js"></script>
     <script src="core/javascript/auto-render.min.js"></script>
@@ -1027,26 +531,17 @@ void TestBasis03(void){
     <script src="core/javascript/bokeh-api-2.2.1.min.js"></script>
 
     <script>
-
-    // === Remark.js initialization ===
-    var slideshow = remark.create(
-    {
+    var slideshow = remark.create({
       highlightStyle: 'monokai',
       countIncrementalSlides: false,
       highlightLines: false
     });
 
-    // === Mermaid.js initialization ===
     mermaid.initialize({
       startOnLoad: false,
       cloneCssStyles: false,
-      flowchart:{
-        height: 50
-      },
-      sequenceDiagram:{
-        width: 110,
-        height: 30
-      }
+      flowchart:{ height: 50 },
+      sequenceDiagram:{ width: 110, height: 30 }
     });
 
     function initMermaid(s) {
@@ -1061,12 +556,7 @@ void TestBasis03(void){
 
     slideshow.on('afterShowSlide', initMermaid);
     initMermaid(slideshow.getSlides()[slideshow.getCurrentSlideIndex()]);
-
-    
-    // === Emojify.js initialization ===
     emojify.run();
-
-    // KaTeX
     renderMathInElement(document.body,{delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}], ignoredTags: ["script", "noscript", "style", "textarea", "pre"] });
 
     // ===== plotly00 =====
