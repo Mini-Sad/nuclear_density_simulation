@@ -233,12 +233,9 @@ $$`
 
 ## Propriétés physiques exploitées
 
-- **Symétrie** : $ \rho_{ab} $ = $ \rho_{ba} $ (réduction du coût de calcul).
+- **Symétrie** : `$\rho_{ab} $ = $ \rho_{ba}$` (réduction du coût de calcul).
 - **Sélection par symétrie** (cas du projet) : matrice **m-diagonale**
-  `$$
-  \rho_{ab} = \delta_{m_a,m_b}\,\rho_{ab},
-  $$`   
-  ce qui limite les couplages aux états partageant le même $m$.
+  `$\rho_{ab} = \delta_{m_a,m_b}\,\rho_{ab}$`     ce qui limite les couplages aux états partageant le même $m$.
 
 **Conséquence :** ces propriétés réduisent le nombre de termes effectivement sommés et
 ouvrent la voie à un calcul optimisé.
@@ -300,7 +297,7 @@ Les nombres quantiques ont les interprétations suivantes :
 - $m$ : indice associé à la dépendance angulaire $e^{im\theta}$  
   (il contrôle les oscillations selon $\theta$).
 
-- $n$ : indice radial de $R(r_,m,n)$  
+- $n$ : indice radial de `$R(r_,m,n)$`  
   (il contrôle la structure dans le plan transverse $r_\perp$).
 
 - $n_z$ : indice longitudinal de $Z(z,n_z)$  
@@ -321,7 +318,7 @@ Les fonctions de base utilisées dans le projet reposent sur des **polynômes or
 - les **polynômes de Hermite** (partie longitudinale, selon $z$),
 - les **polynômes de Laguerre généralisés** (partie radiale, selon $r_\perp$).
 
-Ils permettent d’exprimer $Z(z,n_z)$ et $R(r_\perp,m,n)$ de manière analytique et stable numériquement.
+Ils permettent d’exprimer `$Z(z,n_z)$ et $R(r_\perp,m,n)$` de manière analytique et stable numériquement.
 
 ## Polynômes de Hermite (version physicien)
 
@@ -384,7 +381,7 @@ $$`
 $$`
 
 où les paramètres de troncature (ex. $N$ et $Q$) déterminent directement
-$m_{\max}$, $n_{\max}[m]$ et $n_{z,\max}[m,n]$.
+`$m_{\max}$, $n_{\max}[m]$ et $n_{z,\max}[m,n]$`.
 
 ## Conséquence
 
@@ -480,10 +477,10 @@ $$`
 
 ## Principe de calcul (version brute)
 
-- On énumère tous les états de base $a=(m_a,n_a,n_{z_a})$ et $b=(m_b,n_b,n_{z_b})$.
+- On énumère tous les états de base `$a=(m_a,n_a,n_{z_a})$` et `$b=(m_b,n_b,n_{z_b})$`.
 - Pour chaque paire $(a,b)$ :
-  - on calcule $Psi_a(z,r_\perp)=Z_a(z)\,R_a(r_\perp)$,
-  - on calcule $Psi_b(z,r_\perp)=Z_b(z)\,R_b(r_\perp)$,
+  - on calcule `$Psi_a(z,r_\perp)=Z_a(z)\,R_a(r_\perp)$`,
+  - on calcule `$Psi_b(z,r_\perp)=Z_b(z)\,R_b(r_\perp)$`,
   - on accumule $ \rho_{ab}\,(Psi_a \odot Psi_b)$ sur la grille.
 
 ## Limite principale
@@ -546,7 +543,7 @@ L’algorithme optimisé accélère le calcul de $\rho(\mathbf r)$ en :
 
 - **pré-calculant** les fonctions de base sur la grille :
   - $Z(z,n_z)$ pour tous les $n_z$
-  - $R(r_\perp,m,n)$ pour tous les couples $(m,n)$ :contentReference[oaicite:0]{index=0}
+  - $R(r_\perp,m,n)$ pour tous les couples $(m,n)$ 
 - **réorganisant les boucles** afin d’éviter de recalculer les mêmes termes.
 - utilisant une **factorisation “partial sums”** sur la partie verticale :
 
